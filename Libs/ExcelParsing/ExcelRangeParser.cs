@@ -2,7 +2,6 @@
 using Range = Aspose.Cells.Range;
 
 namespace ExcelParsing;
-
 public class ExcelRangeParser : IDisposable
 {
     private const int MaxIndexForLastCouple = 21; // т.к 4-5 пара имеет row = ~20-19;

@@ -9,18 +9,26 @@ public class ExcelLinker : IDisposable
 {
     private readonly Workbook _workbook;
     private readonly Range _groupRange;
+    private readonly FileInfo _file;
     public Worksheet Sheet => _workbook.Worksheets[0];
     public Cells? Cells => Sheet.Cells;
-    public ExcelLinker(Workbook workbook, Range groupRange)
+
+    public DateTime SheduleDate => DateTime.TryParse(Path.GetFileNameWithoutExtension(_file.Name), out var sheduleFileDate)
+        ? sheduleFileDate : DateTime.Today.Date;
+
+    public static readonly Color OddWeekColor = Color.FromArgb(0, 146, 208, 80);
+    public static readonly Color EvenWeekColor = Color.FromArgb(0, 255, 255, 0);
+    public ExcelLinker(Workbook workbook, Range groupRange, FileInfo file)
     {
         _workbook = workbook;
         _groupRange = groupRange;
+        _file = file;
         _workbook.Worksheets.Add();
+        LinkRange();
     }
-
-    private void LinkRange(FileInfo file)
+    private void LinkRange()
     {
-        var fileName = Path.GetFileNameWithoutExtension(file.FullName);
+        var fileName = Path.GetFileNameWithoutExtension(_file.FullName);
         Cells[0, 0].Value = fileName;
         Cells.InsertCutCells(_groupRange, 1, 0, ShiftType.Down);
 
@@ -29,20 +37,19 @@ public class ExcelLinker : IDisposable
         Cells[1, 1].SetStyle(infoStyle);
     }
 
-    private static Style GetInfoCellStyle(Style style, DateTimeFormatInfo dateTimeFormatInfo)
+    private Style GetInfoCellStyle(Style style, DateTimeFormatInfo dateTimeFormatInfo)
     {
-        style.ForegroundColor = GetNumberOfWeek(DateTime.Today, dateTimeFormatInfo) % 2 == 0 ? Color.FromArgb(0, 255, 255, 0)
-            : Color.FromArgb(0, 146, 208, 80); // Yellow : Green
+        style.ForegroundColor = GetNumberOfWeek(SheduleDate, dateTimeFormatInfo) % 2 == 0 ? EvenWeekColor
+            : OddWeekColor;
         return style;
     }
 
     private static int GetNumberOfWeek(DateTime dateTime, DateTimeFormatInfo dateTimeFormatInfo)
         => dateTimeFormatInfo.Calendar.GetWeekOfYear(dateTime, CalendarWeekRule.FirstFullWeek, DayOfWeek.Monday);
 
-    public void SavePngRange(FileInfo file)
+    public void SaveLinkedRangeToPng()
     {
-        LinkRange(file);
-        var pngFile = Path.Combine(Photo, Path.GetFileNameWithoutExtension(file.Name) + ".png");
+        var pngFile = Path.Combine(Photo, Path.GetFileNameWithoutExtension(_file.Name) + ".png");
         _workbook.Save(pngFile, SaveFormat.Png);
     }
 

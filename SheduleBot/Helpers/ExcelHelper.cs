@@ -14,9 +14,9 @@ internal static class ExcelHelper
             {
                 GroupName = groupName
             };
-            var groupRange = excelParser.GetGroupRange ();
-            using var excelLinker = new ExcelLinker(new Workbook(), groupRange);
-            excelLinker.SavePngRange(excelFile);
+            var groupRange = excelParser.GetGroupRange();
+            using var excelLinker = new ExcelLinker(new Workbook(), groupRange, excelFile);
+            excelLinker.SaveLinkedRangeToPng();
         }
         catch (Exception e)
         {
